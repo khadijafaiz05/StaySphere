@@ -249,11 +249,6 @@ SELECT *
 FROM Complaints
 WHERE status_id = 1;
 
--- Visitor records
-SELECT s.name, v.visitor_name, v.entry_time, v.exit_time
-FROM Visitors v
-JOIN Students s ON v.student_id = s.student_id;
-
 -- Attendance tracking
 SELECT s.name, a.entry_time, a.exit_time
 FROM AttendanceLogs a
