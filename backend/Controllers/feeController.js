@@ -5,6 +5,15 @@ exports.getAllFees = async (req, res) => {
   catch { res.status(500).json({ error: 'Internal Server Error' }); }
 };
 
+exports.getStudentFees = async (req, res) => {
+  try {
+    const fees = await Fee.getFeesByStudent(req.params.id);
+    res.json(fees);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getTotalPayments = async (req, res) => {
   try { res.json(await Fee.getTotalPayments()); }
   catch { res.status(500).json({ error: 'Internal Server Error' }); }
@@ -12,7 +21,7 @@ exports.getTotalPayments = async (req, res) => {
 
 exports.addFee = async (req, res) => {
   try {
-    const { student_id, amount, due_date } = req.body; // removed status, model sets 'Pending'
+    const { student_id, amount, due_date } = req.body;
     await Fee.addFee(student_id, amount, due_date);
     res.status(201).json({ message: 'Fee record created' });
   } catch { res.status(500).json({ error: 'Internal Server Error' }); }
