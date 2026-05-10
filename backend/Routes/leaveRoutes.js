@@ -9,8 +9,11 @@ const validate = (req, res, next) => {
   next();
 };
 
-// GET /api/leaves
+// GET /api/leaves  
 router.get('/', leaveController.getAllLeaves);
+
+// GET /api/leaves/student/:id  
+router.get('/student/:id', leaveController.getStudentLeaves);
 
 // POST /api/leaves
 router.post(
