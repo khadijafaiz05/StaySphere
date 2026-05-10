@@ -25,11 +25,19 @@ const Fee = {
       .input('amount', sql.Decimal, amount)
       .input('due_date', sql.Date, due_date)
       .query(`
-        INSERT INTO Fees (fee_id, student_id, amount, due_date, status)
-        VALUES ((SELECT ISNULL(MAX(fee_id),0)+1 FROM Fees),
-                @student_id, @amount, @due_date, 'Pending')
-      `);
+         INSERT INTO Fees (student_id, amount, due_date, status)
+  VALUES (@student_id, @amount, @due_date, 'Pending')
+`);
+
   },
+
+  async getFeesByStudent(student_id) {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('student_id', sql.Int, student_id)
+    .query('SELECT fee_id, amount, due_date, status FROM Fees WHERE student_id = @student_id');
+  return result.recordset;
+},
 
   async makePayment(fee_id, amount_paid, payment_date) {
     const pool = await poolPromise;
@@ -37,12 +45,11 @@ const Fee = {
       .input('fee_id', sql.Int, fee_id)
       .input('amount_paid', sql.Decimal, amount_paid)
       .input('payment_date', sql.Date, payment_date)
-      .query(`
-        INSERT INTO Payments (payment_id, fee_id, amount_paid, payment_date)
-        VALUES ((SELECT ISNULL(MAX(payment_id),0)+1 FROM Payments),
-                @fee_id, @amount_paid, @payment_date);
-        UPDATE Fees SET status = 'Paid' WHERE fee_id = @fee_id;
-      `);
+    .query(`
+  INSERT INTO Payments (fee_id, amount_paid, payment_date)
+  VALUES (@fee_id, @amount_paid, @payment_date);
+  UPDATE Fees SET status = 'Paid' WHERE fee_id = @fee_id;
+`);
   }
 };
 
