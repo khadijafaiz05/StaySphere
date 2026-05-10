@@ -9,6 +9,9 @@ const validate = (req, res, next) => {
   next();
 };
 
+// GET /api/room-types
+router.get('/types', roomController.getRoomTypes);
+
 // GET /api/rooms
 router.get('/', roomController.getAllRooms);
 
@@ -17,6 +20,20 @@ router.get('/allocations', roomController.getAllAllocations);
 
 // GET /api/rooms/:id
 router.get('/:id', roomController.getRoomById);
+
+// POST /api/rooms
+router.post(
+  '/',
+  [
+    body('room_number').notEmpty().withMessage('Room number is required'),
+    body('type_id').isInt({ min: 1 }).withMessage('Valid type_id is required'),
+  ],
+  validate,
+  roomController.addRoom
+);
+
+// PUT /api/rooms/:id
+router.put('/:id', roomController.updateRoom);
 
 // POST /api/rooms/allocate
 router.post(
