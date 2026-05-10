@@ -1,14 +1,26 @@
 import { useEffect, useState } from 'react';
-import API from '../../api/api';
+
+const API = 'http://localhost:3000/api';
+
+const authHeader = () => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${localStorage.getItem('ss_token')}`
+});
 
 export default function AdminAttendance() {
-  const [logs, setLogs] = useState([]);
+  const [logs,      setLogs]      = useState([]);
   const [studentId, setStudentId] = useState('');
-  const [alert, setAlert] = useState(null);
+  const [alert,     setAlert]     = useState(null);
 
   const load = async () => {
-    const { data } = await API.get('/attendance');
-    setLogs(data);
+    try {
+      const res  = await fetch(`${API}/attendance`, { headers: authHeader() });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load logs');
+      setLogs(data);
+    } catch (e) {
+      showAlert(e.message, 'error');
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -21,74 +33,183 @@ export default function AdminAttendance() {
   const handleCheckin = async () => {
     if (!studentId) { showAlert('Enter a student ID', 'error'); return; }
     try {
-      await API.post('/attendance/checkin', { student_id: studentId });
-      showAlert('Check-in recorded'); setStudentId(''); load();
-    } catch (e) { showAlert(e.response?.data?.error || 'Error', 'error'); }
+      const res  = await fetch(`${API}/attendance/checkin`, {
+        method:  'POST',
+        headers: authHeader(),
+        body:    JSON.stringify({ student_id: parseInt(studentId) })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Check-in failed');
+      showAlert('Check-in recorded');
+      setStudentId('');
+      load();
+    } catch (e) {
+      showAlert(e.message, 'error');
+    }
   };
 
   const handleCheckout = async (logId) => {
     try {
-      await API.put(`/attendance/checkout/${logId}`);
-      showAlert('Check-out recorded'); load();
-    } catch (e) { showAlert(e.response?.data?.error || 'Error', 'error'); }
+      const res  = await fetch(`${API}/attendance/checkout/${logId}`, {
+        method:  'PUT',
+        headers: authHeader()
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Check-out failed');
+      showAlert('Check-out recorded');
+      load();
+    } catch (e) {
+      showAlert(e.message, 'error');
+    }
   };
 
-  const fmt = d => d ? new Date(d).toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
-  const open = logs.filter(l => !l.exit_time);
+  const fmt = (d) => d
+    ? new Date(d).toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : '—';
+
+  const openLogs  = logs.filter((l) => !l.exit_time);
+  const closedLogs = logs.filter((l) => l.exit_time);
 
   return (
-    <div className="page">
+    <div className="page fade-in">
+
+      {/*  Page header  */}
       <div className="page-header">
-        <div className="page-title"><h2>Attendance Tracking</h2><p>Monitor hostel entry/exit logs</p></div>
-      </div>
-
-      {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
-
-      <div className="stats-grid">
-        <div className="stat-card"><div className="label">Total Logs</div><div className="value">{logs.length}</div></div>
-        <div className="stat-card"><div className="label">Currently Inside</div><div className="value" style={{color:'var(--warn)'}}>{open.length}</div></div>
-      </div>
-
-      <div className="checkin-card">
-        <h3>Record Attendance</h3>
-        <div className="checkin-row">
-          <div className="form-group" style={{margin:0,flex:1}}>
-            <label>Student ID</label>
-            <input type="number" placeholder="e.g. 1" value={studentId} onChange={e => setStudentId(e.target.value)} />
-          </div>
-          <button className="btn btn-success" onClick={handleCheckin}>✓ Check In</button>
+        <div className="page-title">
+          <h2>Attendance Tracking</h2>
+          <p>Record and monitor student check-ins and check-outs</p>
         </div>
-        {open.length > 0 && (
-          <div style={{marginTop:'1rem'}}>
-            <div style={{fontSize:'0.78rem',color:'var(--muted)',marginBottom:'0.6rem',fontWeight:600,textTransform:'uppercase'}}>Open — Click to Check Out</div>
-            <div style={{display:'flex',flexWrap:'wrap',gap:'0.5rem'}}>
-              {open.map(l => (
-                <button key={l.log_id} className="btn btn-sm btn-warn" onClick={() => handleCheckout(l.log_id)}
-                  style={{background:'rgba(224,154,74,0.15)',color:'var(--warn)',border:'1px solid rgba(224,154,74,0.3)'}}>
-                  {l.name} #{l.log_id} →
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
+      {/*  Alert banners  */}
+      {alert && (
+        <div className={`alert ${alert.type === 'error' ? 'alert-error' : 'alert-success'}`}>
+          {alert.msg}
+        </div>
+      )}
+
+      {/*  Summary stats  */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="label">Total Logs</div>
+          <div className="value">{logs.length}</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Currently Inside</div>
+          <div className="value" style={{ color: 'var(--success)' }}>{openLogs.length}</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Checked Out</div>
+          <div className="value" style={{ color: 'var(--muted)' }}>{closedLogs.length}</div>
+        </div>
+      </div>
+
+      {/* ── Check-in form ── */}
+      <div className="checkin-card" style={{ marginBottom: '1.5rem' }}>
+        <h3>Record Check-In</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.8rem', alignItems: 'flex-end' }}>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label>Student ID</label>
+            <input
+              type="number"
+              placeholder="Enter student ID"
+              value={studentId}
+              onChange={(e) => setStudentId(e.target.value)}
+            />
+          </div>
+          <button
+            className="btn btn-primary"
+            style={{ marginBottom: '1.2rem' }}
+            onClick={handleCheckin}
+          >
+            Check In
+          </button>
+        </div>
+      </div>
+
+      {/*  Currently inside  */}
+      {openLogs.length > 0 && (
+        <div className="table-wrap" style={{ marginBottom: '1.5rem' }}>
+          <div className="table-toolbar">
+            <h3>Currently Inside</h3>
+            <span className="badge badge-success">{openLogs.length} active</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Entry Time</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {openLogs.map((log) => (
+                <tr key={log.log_id}>
+                  <td style={{ fontWeight: 500 }}>{log.name}</td>
+                  <td style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.85rem' }}>
+                    {fmt(log.entry_time)}
+                  </td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleCheckout(log.log_id)}
+                    >
+                      Check Out
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/*  All logs table  */}
       <div className="table-wrap">
-        <div className="table-toolbar"><h3>All Logs ({logs.length})</h3></div>
+        <div className="table-toolbar">
+          <h3>All Attendance Logs</h3>
+          <button className="btn btn-sm btn-ghost" onClick={load}>↻ Refresh</button>
+        </div>
+
         <table>
-          <thead><tr><th>Student</th><th>Entry</th><th>Exit</th><th>Hours</th><th>Status</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Entry Time</th>
+              <th>Exit Time</th>
+              <th>Hours</th>
+              <th>Status</th>
+            </tr>
+          </thead>
           <tbody>
-            {logs.map(l => (
-              <tr key={l.log_id}>
-                <td style={{fontWeight:600}}>{l.name}</td>
-                <td style={{fontFamily:'monospace'}}>{fmt(l.entry_time)}</td>
-                <td style={{fontFamily:'monospace'}}>{l.exit_time ? fmt(l.exit_time) : '—'}</td>
-                <td>{l.exit_time ? `${l.hours_spent}h` : '—'}</td>
-                <td>{l.exit_time ? <span className="badge badge-success">Done</span> : <span className="badge badge-warn">Inside</span>}</td>
+            {logs.map((log) => (
+              <tr key={log.log_id}>
+                <td style={{ fontWeight: 500 }}>{log.name}</td>
+                <td style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.85rem' }}>
+                  {fmt(log.entry_time)}
+                </td>
+                <td style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.85rem' }}>
+                  {log.exit_time ? fmt(log.exit_time) : '—'}
+                </td>
+                <td style={{ fontFamily: "'DM Mono', monospace" }}>
+                  {log.exit_time ? `${log.hours_spent}h` : '—'}
+                </td>
+                <td>
+                  <span className={`badge ${log.exit_time ? 'badge-success' : 'badge-warn'}`}>
+                    {log.exit_time ? 'Done' : 'Inside'}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+
+        {logs.length === 0 && (
+          <div className="empty">
+            <div className="icon">🕐</div>
+            <p>No attendance logs yet</p>
+          </div>
+        )}
       </div>
     </div>
   );
