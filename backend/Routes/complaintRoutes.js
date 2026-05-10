@@ -15,11 +15,15 @@ router.get('/', complaintController.getAllComplaints);
 // GET /api/complaints/pending
 router.get('/pending', complaintController.getPendingComplaints);
 
+// GET /api/complaints/student/:id
+router.get('/student/:id', complaintController.getStudentComplaints);
+
 // POST /api/complaints
 router.post(
   '/',
   [
     body('student_id').isInt({ min: 1 }).withMessage('Valid student_id is required'),
+    body('category').notEmpty().withMessage('Category is required'),
     body('description')
       .notEmpty().withMessage('Description is required')
       .isLength({ min: 5 }).withMessage('Description must be at least 5 characters'),
