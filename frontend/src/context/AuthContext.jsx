@@ -1,21 +1,21 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState } from "react";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem('ss_user') || 'null')
-  );
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ss_user')); } catch { return null; }
+  });
 
   const login = (userData, token) => {
-    localStorage.setItem('ss_token', token);
     localStorage.setItem('ss_user', JSON.stringify(userData));
+    localStorage.setItem('ss_token', token);
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('ss_token');
     localStorage.removeItem('ss_user');
+    localStorage.removeItem('ss_token');
     setUser(null);
   };
 
@@ -26,4 +26,8 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  return ctx;
+}
