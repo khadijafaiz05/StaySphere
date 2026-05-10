@@ -1,5 +1,32 @@
 const Room = require('../Models/roomModel');
 
+exports.getRoomTypes = async (req, res) => {
+  try { res.json(await Room.getRoomTypes()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+exports.addRoom = async (req, res) => {
+  try {
+    const { room_number, type_id } = req.body;
+
+    await Room.addRoom(room_number, type_id);
+
+    res.status(201).json({ message: 'Room added successfully' });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateRoom = async (req, res) => {
+  try {
+    const { room_number, type_id, status } = req.body;
+    await Room.updateRoom(req.params.id, room_number, type_id, status);
+    res.json({ message: 'Room updated successfully' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
 exports.getAllRooms = async (req, res) => {
   try { res.json(await Room.getAllRooms()); }
   catch { res.status(500).json({ error: 'Internal Server Error' }); }
