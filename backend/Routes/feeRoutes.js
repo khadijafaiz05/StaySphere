@@ -15,6 +15,9 @@ router.get('/', feeController.getAllFees);
 // GET /api/fees/total-payments
 router.get('/total-payments', feeController.getTotalPayments);
 
+// GET /api/fees/student/:id
+router.get('/student/:id', feeController.getStudentFees);
+
 // POST /api/fees
 router.post(
   '/',
