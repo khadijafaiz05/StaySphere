@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'staysphere_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.auth = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
