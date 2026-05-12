@@ -17,7 +17,7 @@ StaySphere, A Smart Hostel Management System is a web-based application that is 
 
 ## About the Project
 
-StaySphere streamlines hostel operations by replacing manual, paper-based processes with a unified digital system. The platform supports three roles — **Admin** and **Student**  each with tailored views and permissions.
+StaySphere streamlines hostel operations by replacing manual, paper-based processes with a unified digital system. The platform supports three roles : **Admin** and **Student**  each with tailored views and permissions.
 
 Key goals:
 - Centralize student records, room allocations, and fee tracking
@@ -255,9 +255,9 @@ The app will open at `http://localhost:3000`.
 
 | Name | Role / Features |
 |---|---|
-| **Romaisa Sajjad** | Project Lead · Room Management |Complaints · Leave Requests · Visitor Logs |
-| *(Khadija Faiz)* | User Authentication · Login System | Attendance Tracking (Admin & Student) |Student Management|
-| *(Aima Shakeel)* | Room Management · Student Profile | Fee & Payment Management |
+| **Romaisa Sajjad** | Project Lead  Room Management |Complaints Leave Requests  Visitor Logs |
+| *Khadija Faiz* | User Authentication  Login System | Attendance Tracking (Admin & Student) |Student Management|
+| *Aima Shakeel* | Room Management  Student Profile | Fee & Payment Management |
 
 
 ---
