@@ -255,8 +255,8 @@ The app will open at `http://localhost:3000`.
 
 | Name | Role / Features |
 |---|---|
-| **Romaisa Sajjad** | Project Lead,Room Management,Complaints Leave Requests  Visitor Logs |
-| *Khadija Faiz* | User Authentication  Login System , Attendance Tracking (Admin & Student) ,Student Management|
+| **Romaisa Sajjad** | Project Lead,Room Management,Complaints, Leave Requests,  Visitor Logs |
+| *Khadija Faiz* | User Authentication ,Login System , Attendance Tracking (Admin & Student) ,Student Management|
 | *Aima Shakeel* | Room Management, Student Profile ,Fee & Payment Management |
 
 
